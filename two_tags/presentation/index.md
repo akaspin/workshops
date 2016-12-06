@@ -1,11 +1,16 @@
-theme: Titillium
-
-# [fit] Tags, deps 
-# [fit] & two smoking tests
+---
+layout: default
+title: Default Presentation
 
 ---
 
-# [fit] WTF?!
+class: middle, center
+
+# Tags, deps and two smoking builds
+
+---
+
+# WTF?!
 
 1. Not all packages in Go are completely crossplatform. 
 1. ... even in pure Go.
@@ -14,13 +19,15 @@ theme: Titillium
 1. No preprocessor
 1. No macro
 
---- 
+---
 
-# [fit] Simple problem
+# Simple problem
+
+Let's try to run OS-specific command.
 
 ```go
 func main() {
-	output, err := exec.Command("echo", "test").Output()
+*   output, err := exec.Command("echo", "test").Output()
     if err != nil {
     	panic(err)
     }
@@ -28,12 +35,14 @@ func main() {
 }
 ```
 
-This code will fail under MS Windows because `echo` is command of `cmd.exe`
+This code will fail under MS Windows because `echo` is command of `cmd.exe`.
 
-^ ```example_01_01
+???
+```
+example_01_01
 $ make dist
 $ ./dist/example_01_01
-WIN:```  
+```
 
 ---
 
@@ -42,7 +51,7 @@ WIN:```
 Make two separate source files. `exec_nix.go`:
 
 ```go
-// +build !windows
+*// +build !windows
 func execCmd(cmd string, args ...string) *exec.Cmd {
 	return exec.Command(cmd, args...)
 }
@@ -51,7 +60,7 @@ func execCmd(cmd string, args ...string) *exec.Cmd {
 and `exec_win.go`:
 
 ```go
-// +build windows
+*// +build windows
 func execCmd(cmd string, args ...string) *exec.Cmd {
     return exec.Command("cmd", append([]string{"/C", cmd}, args...)...)
 }
@@ -59,7 +68,7 @@ func execCmd(cmd string, args ...string) *exec.Cmd {
 
 ---
 
-# ... and one main
+# ... and one main.go
 
 ```go
 func main() {
@@ -73,16 +82,18 @@ func main() {
 
 Build as usual. Go will use `execCmd` from corresponding source.
 
-^ ```example_01_02
+???
+```
+example_01_02
 $ make dist
 $ ./dist/example_01_02
-WIN:```
+```
 
 ---
 
-# [fit] Need more?
+# Need more?
 
-Common approach to logging:
+Let's implement logger:
 
 ```go
 func Debug(msg string) {
@@ -96,35 +107,39 @@ func Debug(msg string) {
 1. Complex logic.
 1. Complex app configuration.
 
-^ ```example_02_01
+???
+```
+example_02_01
 $ make dist
 $ ./dist/example_02_01
-$ DEBUG=yes ./dist/example_02_01```
+$ DEBUG=yes ./dist/example_02_01
+```
 
 ---
 
-# [fit] Throw the trash from production![^1]
+# Throw the trash from production!
 
 ```go
 // +build debug
 func Debug(msg string) {
 	fmt.Fprintln(os.Stderr, msg)
 }
+```
 
+```go
 // +build !debug
 func Debug(msg string) { }
 ```
 
 Tags also works in tests!
 
-[^1]: Real world example: `go get github.com/akaspin/logx`
-
-
-^ ```example_02_02
+???
+```example_02_02
 $ make dist
 $ ./dist/example_02_02
 $ example_02_02-debug
-$ make dist_m - without debug tag "Debug" function will be inlined.```
+$ make dist_m - without debug tag "Debug" function will be inlined.
+```
 
 ---
 
@@ -147,17 +162,7 @@ This source will builded only under Windows with both "integration" and "anyothe
 
 ---
 
-# [fit] Dependencies
-
-We need deps! Now!
-
-1. Two approaches: Virtual Environments and Vendoring
-1. Go packages is very special.
-1. Package management is tricky.
-
----
-
-# [fit] Virtual environments
+# Virtual environments
 
 1. Based on system paths. 
 1. Permits to switch libraries and toolchain.
@@ -165,11 +170,13 @@ We need deps! Now!
 1. Great chance to shoot yourself in the leg.
 1. VE is not a package manager.
 
-^ examples: python virtualenv, rbenv
+???
+examples: python virtualenv, rbenv
+
 
 ---
 
-# [fit] Go already has virtual environments
+# Go already has virtual environments
 
 1. `$GOROOT` for go toolchain and builtins.
 1. `$GOBIN` for `go install`.
@@ -182,30 +189,62 @@ You can stack directories in `$GOPATH`.
 GOPATH=/my/own/packages:$GOPATH go build ...
 ```
 
-^ ```example_03_01
+???
+```
+example_03_01
 $ make test_fail
-$ make test```
+$ make test
+```
 
 ---
 
-# [fit] Project-based environments (vendoring)
+# Dependency management
+
+We need deps! Now!
+
+1. Two approaches: Virtual Environments and Vendoring
+1. Go packages is very special.
+1. Package management is tricky.
+
+---
+
+# Project-based environments (vendoring)
 
 1. Based on assets inside project.
 1. Permits to override libraries.
 1. Not flexible.
 1. Less chance to shoot yourself in the leg.
 
-^ example: NPM
+???
+example: NPM, vendor
 
 ---
 
-# [fit] Please don't vendor me!
+# Go packages facts
+
+```go
+import "github.com/akaspin/dummy"
+import "github.com/akaspin/dummy/sub"
+```
+
+At first sight Go package is git repo.
+
+**But!**
+
+1. Go package may not be subdirectories!
+1. `dummy` and `dummy/sub` are completely different packages.
+1. `go get` always clones "master" to current $GOPATH.
+1. `go get` also pulls all deps if not present.
+
+---
+
+# When vendor is bad
 
 1. All deps must be in "vendor" directory.
 1. Go toolchain doesn't ignore "vendor" directory!
 1. Vendor sometimes break build and test.
 
-```
+```bash
 $ go test $(go list ./... | grep -v /vendor/)
 cannot use &metadata.TrailerMD 
     (type *"google.golang.org/grpc/metadata".MD) 
@@ -214,44 +253,41 @@ cannot use &metadata.TrailerMD
 
 Bad news: from Go 1.6 go vendoring can't be disabled.
 
-^ ```example_03_02
-$ make test_fail - go toolchain doesn't inore vendor!
-$ make test```
-
----
-
-# [fit] Go packages facts
-
-```go
-import "github.com/akaspin/dummy"
+???
+```
+example_03_02
+$ make test_fail - go toolchain doesn't ignore vendor!
+$ make test
 ```
 
-At first sight Go package is git repo.
+---
 
-**But!**
+# When vendor is good?
 
-1. Go package may not be subdirectories!
-1. "github.com/akaspin/pkg1" and "github.com/akaspin/pkg1/sub" are completely different packages.
-1. "go get" always clones "master" to current $GOPATH.
+```bash
+$ go get -v github.com/package/with-a-lot-of-deps
+```
+
+Go searches for all dependencies and installs all of them!
+
+With `vendor` you can avoid this.
+
+???
+```
+Example: terraform
+```
 
 ---
 
-# [fit] Package management
-  
-All package management in go is just put libs to the directory! That's all! Please, please, please: no complex solutions!
-  
+# Dependency management tools
+
 1. Simple, stupid, tedious: git submodules (ok, pass).
 1. One of hundreds: Glide, GoDep, GPM, GB (not exactly), Govendor ...
-
-**What we need?!**
-
-1. Just grab end put declared packages to _any_ specific directory.
-1. Do not try to resolve any conflicts!
-1. Remove artifacts like ".git".
+1. Chaos
 
 ---
 
-# [fit] Common troubles
+# Common troubles
 
 1. Most tools deploy packages only in "vendor" directory. 
 1. Some tools wan't remove artifacts (gvt).
@@ -268,24 +304,38 @@ All package management in go is just put libs to the directory! That's all! Plea
 
 ---
 
-# [fit] And the winner is ...
+# What we need?
+  
+All package management in go is just put libs to the directory! 
+That's all! Please, please, please: no complex solutions!
+  
+1. Just grab end put declared packages to _any_ specific directory.
+1. Do not try to resolve any conflicts!
+1. Remove artifacts like ".git".
 
 ---
 
-# [fit] TRASH!
+class: middle, center
 
-1. Simple as Go.
-1. Developed by Rancher
-1. Used by Docker
-1. Our patches :-)
+# And the winner is ...
 
 ---
 
-# [fit] Trash is beautiful
+class: middle, center
+
+# TRASH!
+
+Simple as Go. Developed by Rancher. Used by Docker. 
+
+Our patches :-)
+
+---
+
+# Trash is beautiful
 
 Simple `vendor.conf`:
 
-```
+```ini
 github.com/applift/pump19
 github.com/akaspin/logx     v6.2.0
 ```
@@ -296,12 +346,15 @@ and simple command:
 $ trash -T _vendor/src
 ```
 
-^ ```example_03_03
+???
+```
+example_03_03
 $ make deps
-$ make test```
+$ make test
+```
 
 ---
 
-# [fit] Questions
+class: middle, center
 
-
+# Questions

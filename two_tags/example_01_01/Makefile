@@ -1,3 +1,5 @@
+.phony: clean
+
 CWD 	= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BIN		= $(shell basename $(CWD))
 REPO	= github.com/akaspin/workshops/two_tags
@@ -16,3 +18,6 @@ dist/$(BIN).exe:
 dist/$(BIN):
 	GOOS=darwin CGO_ENABLED=0  \
 		go build $(GOOPTS) -o $@ $(REPO)/$(BIN)
+
+clean:
+	rm -rf dist
