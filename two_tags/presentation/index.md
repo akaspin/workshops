@@ -160,6 +160,11 @@ Go uses `AND` for build tags in one line
 
 This source will builded only under Windows with both "integration" and "anyother" tags.
 
+???
+```example_02_03
+
+```
+
 ---
 
 # Virtual environments
