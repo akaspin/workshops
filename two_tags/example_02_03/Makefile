@@ -7,7 +7,7 @@ PKGS 		= $(shell cd $(GOPATH)/src/$(REPO) && go list ./...)
 
 GOOPTS=-installsuffix cgo -ldflags '-s'
 
-dist: dist/$(BIN).exe dist/$(BIN)
+dist: dist/$(BIN).exe dist/$(BIN) dist/$(BIN)-debug.exe dist/$(BIN)-debug
 
 dist/$(BIN).exe: $(SRC)
 	GOOS=windows CGO_ENABLED=0 go build $(GOOPTS) -o $@ $(REPO)/$(BIN)

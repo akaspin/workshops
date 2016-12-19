@@ -12,12 +12,10 @@ GOOPTS=-installsuffix cgo -ldflags '-s'
 dist: dist/$(BIN).exe dist/$(BIN)
 
 dist/$(BIN).exe:
-	GOOS=windows CGO_ENABLED=0  \
-		go build $(GOOPTS) -o $@ $(REPO)/$(BIN)
+	GOOS=windows CGO_ENABLED=0 go build $(GOOPTS) -o $@ $(REPO)/$(BIN)
 
 dist/$(BIN):
-	GOOS=darwin CGO_ENABLED=0  \
-		go build $(GOOPTS) -o $@ $(REPO)/$(BIN)
+	GOOS=darwin CGO_ENABLED=0 go build $(GOOPTS) -o $@ $(REPO)/$(BIN)
 
 clean:
 	rm -rf dist

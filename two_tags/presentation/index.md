@@ -10,6 +10,12 @@ class: middle, center
 
 ---
 
+class: middle, center
+
+# Tags
+
+---
+
 # WTF?!
 
 1. Not all packages in Go are completely crossplatform. 
@@ -72,7 +78,7 @@ func execCmd(cmd string, args ...string) *exec.Cmd {
 
 ```go
 func main() {
-	output, err := execCmd("echo", "test").Output()
+*	output, err := execCmd("echo", "test").Output()
     if err != nil {
     	panic(err)
     }
@@ -88,12 +94,13 @@ example_01_02
 $ make dist
 $ ./dist/example_01_02
 ```
+You can also use file postfix for builtin tags. But it's not flexible.
 
 ---
 
 # Need more?
 
-Let's implement logger:
+Let's implement logging:
 
 ```go
 func Debug(msg string) {
@@ -120,14 +127,14 @@ $ DEBUG=yes ./dist/example_02_01
 # Throw the trash from production!
 
 ```go
-// +build debug
+*// +build debug
 func Debug(msg string) {
 	fmt.Fprintln(os.Stderr, msg)
 }
 ```
 
 ```go
-// +build !debug
+*// +build !debug
 func Debug(msg string) { }
 ```
 
@@ -149,21 +156,29 @@ Go using `OR` for separate lines regardless of source file.
 
 ```bash
 $ GOOS=windows go build -tags debug ...
-$ GOOS=windows go test -tags="debug integration" ...
 ```
-
-Go uses `AND` for build tags in one line
-
-```go
-// +build windows integration anyother
-```
-
-This source will builded only under Windows with both "integration" and "anyother" tags.
 
 ???
-```example_02_03
+```
+example_02_03
+$ make dist
 
 ```
+
+---
+
+class: middle, center
+
+# Dependencies
+
+---
+
+# Two approaches
+
+1. Virtual Environments 
+1. Vendoring
+
+Of course. You can use both.
 
 ---
 
@@ -178,10 +193,42 @@ This source will builded only under Windows with both "integration" and "anyothe
 ???
 examples: python virtualenv, rbenv
 
+---
+
+# Project-based environments (vendoring)
+
+1. Based on assets inside project.
+1. Permits to override libraries.
+1. Not flexible.
+1. Less chance to shoot yourself in the leg.
+1. Vendoring is not a package manager.
+
+???
+example: NPM, vendor
 
 ---
 
-# Go already has virtual environments
+# Go packages facts
+
+```go
+import (
+    "github.com/akaspin/dummy"
+    "github.com/akaspin/dummy/sub"
+    "github.com/akaspin/dummy/sub/dummy"
+)
+```
+
+At first sight Go package is git repo.
+
+**But!**
+
+1. Go package may not be subdirectories!
+1. `dummy` and `dummy/sub` are not related.
+1. `dummy` and `dummy/sub/dummy` are completely different packages.
+
+---
+
+# Go and Virtual environments
 
 1. `$GOROOT` for go toolchain and builtins.
 1. `$GOBIN` for `go install`.
@@ -203,50 +250,10 @@ $ make test
 
 ---
 
-# Dependency management
-
-We need deps! Now!
-
-1. Two approaches: Virtual Environments and Vendoring
-1. Go packages is very special.
-1. Package management is tricky.
-
----
-
-# Project-based environments (vendoring)
-
-1. Based on assets inside project.
-1. Permits to override libraries.
-1. Not flexible.
-1. Less chance to shoot yourself in the leg.
-
-???
-example: NPM, vendor
-
----
-
-# Go packages facts
-
-```go
-import "github.com/akaspin/dummy"
-import "github.com/akaspin/dummy/sub"
-```
-
-At first sight Go package is git repo.
-
-**But!**
-
-1. Go package may not be subdirectories!
-1. `dummy` and `dummy/sub` are completely different packages.
-1. `go get` always clones "master" to current $GOPATH.
-1. `go get` also pulls all deps if not present.
-
----
-
-# When vendor is bad
+# Vendoring pitfalls
 
 1. All deps must be in "vendor" directory.
-1. Go toolchain doesn't ignore "vendor" directory!
+1. Go toolchain newer ignore "vendor" directory!
 1. Vendor sometimes break build and test.
 
 ```bash
@@ -273,9 +280,7 @@ $ make test
 $ go get -v github.com/package/with-a-lot-of-deps
 ```
 
-Go searches for all dependencies and installs all of them!
-
-With `vendor` you can avoid this.
+1. Go searches for all dependencies and installs all of them! With `vendor` you can avoid this.
 
 ???
 ```
@@ -286,7 +291,7 @@ Example: terraform
 
 # Dependency management tools
 
-1. Simple, stupid, tedious: git submodules (ok, pass).
+1. Simple, stupid, tedious: git submodules (ok, pass it).
 1. One of hundreds: Glide, GoDep, GPM, GB (not exactly), Govendor ...
 1. Chaos
 
@@ -311,12 +316,11 @@ Example: terraform
 
 # What we need?
   
-All package management in go is just put libs to the directory! 
-That's all! Please, please, please: no complex solutions!
-  
 1. Just grab end put declared packages to _any_ specific directory.
 1. Do not try to resolve any conflicts!
-1. Remove artifacts like ".git".
+1. Remove artifacts like ".git" and "*_test.go".
+
+That's all! Please, please, please: no complex solutions!
 
 ---
 
@@ -356,6 +360,7 @@ $ trash -T _vendor/src
 example_03_03
 $ make deps
 $ make test
+You can use vendor
 ```
 
 ---
