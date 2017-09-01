@@ -1,0 +1,57 @@
+{
+  "AWSEBDockerrunVersion": 2,
+  "authentication": {
+    "bucket": "applift-deploys",
+    "key": "dockercfg"
+  },
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "applift/squid-web-app:squid-webapp-production-v2-maintenance",
+      "command": ["httpd", "-f", "-p", "8080"],
+      "essential": true,
+      "memoryReservation": 256,
+      "logConfiguration": {
+        "logDriver": "json-file",
+        "options": {
+          "max-size": "50m",
+          "max-file": "3"
+        }
+      }
+    },
+    {
+      "name": "proxy",
+      "image": "applift/datalift-management-web-app:nginx-1.10.3-3.0",
+      "essential": true,
+      "memoryReservation": 128,
+      "links": [
+        "app"
+      ],
+      "environment": [
+        {
+          "name": "FORCE_HTTPS",
+          "value": "false"
+        }
+      ],
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": ""
+        },
+        {
+          "containerPort": 8443,
+          "hostPort": 8443,
+          "protocol": ""
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "json-file",
+        "options": {
+          "max-size": "50m",
+          "max-file": "3"
+        }
+      }
+    }
+  ]
+}
